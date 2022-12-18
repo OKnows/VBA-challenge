@@ -1,0 +1,105 @@
+
+Sub Stock_Data()
+   'Declare variables
+    Dim ws As Worksheet
+    
+    For Each ws In Worksheets
+        Dim total As Double
+        Dim x As Integer
+        
+   'Put ticker and various totals in these cells
+        ws.Range("I1").Value = "Ticker"
+        ws.Range("L1").Value = "Total volume"
+        ws.Range("J1").Value = "Yearly change"
+        ws.Range("K1").Value = "Percentage change"
+        ws.Range("O2").Value = "Greatest % increase"
+        ws.Range("O3").Value = "Greatest % decrease"
+        ws.Range("O4").Value = "Greatest total volume"
+        
+       'ticker counter as we go through the rows
+        x = 0
+        Start = 2
+        lastRow = ws.Cells(Rows.Count, "A").End(xlUp).Row
+        
+        'go through rows after the header to the last row
+       For i = 2 To lastRow
+       
+       'if the ticker symbol changes, add symbol and volume to the new columns created
+         If ws.Cells(i, 1).Value <> ws.Cells(i + 1, 1).Value Then
+        
+                Ticker = ws.Cells(i, 1).Value
+                
+                ws.Range("I" & 2 + x).Value = Ticker
+                
+                volume = ws.Cells(i, 7).Value
+                
+                ws.Range("L" & 2 + x).Value = volume + total
+                
+                
+        ' Calculate yearly price and percentage change
+                
+                Change = (ws.Cells(i, 6).Value - ws.Cells(Start, 3).Value)
+                
+                percentage_change = Change / ws.Cells(Start, 3).Value
+                
+                
+                ws.Range("J" & 2 + x).Value = Change
+                ws.Range("J" & 2 + x).NumberFormat = "0.00"
+                
+                ws.Range("K" & 2 + x).Value = percentage_change
+                ws.Range("K" & 2 + x).NumberFormat = "0.00%"
+                
+        'Conditionally format the negative and positive changes
+                        If Change > 0 Then
+                                ws.Range("J" & 2 + x).Interior.ColorIndex = 4
+                        ElseIf Change < 0 Then
+                                ws.Range("J" & 2 + x).Interior.ColorIndex = 3
+                        Else
+                                ws.Range("J" & 2 + x).Interior.ColorIndex = 0
+                        End If
+                
+                ' move to the next ticker
+                Start = i + 1
+            
+                
+                ' Reset the value
+                total = 0
+                
+                ' Increment x for next ticker
+                x = x + 1
+        
+                Else
+        
+                volume = ws.Cells(i, 7).Value
+        
+                total = total + volume
+                
+        
+            End If
+        
+        Next i
+        
+        ' Bonus: find the maximum, minimum % change and max volume and place in correct cells
+        
+        greatest_increase = WorksheetFunction.Max(ws.Range("K2:K" & lastRow))
+        greatest_decrease = WorksheetFunction.Min(ws.Range("K2:K" & lastRow))
+        greatest_volume = WorksheetFunction.Max(ws.Range("L2:L" & lastRow))
+        
+        ws.Range("Q2") = "%" & greatest_increase * 100
+        ws.Range("Q3") = "%" & greatest_decrease * 100
+        ws.Range("Q4") = greatest_volume
+
+        ' find location of ticker symbol which matches the values we found above
+        inc_loc = WorksheetFunction.Match(greatest_increase, ws.Range("K2:K" & lastRow), 0)
+        dec_loc = WorksheetFunction.Match(greatest_decrease, ws.Range("K2:K" & lastRow), 0)
+        vol_loc = WorksheetFunction.Match(greatest_volume, ws.Range("L2:L" & lastRow), 0)
+
+        ' assign them to the right cells (add 1 beacuse your range above didnt include the header row)
+        ws.Range("P2") = ws.Cells(inc_loc + 1, 9)
+        ws.Range("P3") = ws.Cells(dec_loc + 1, 9)
+        ws.Range("P4") = ws.Cells(vol_loc + 1, 9)
+    
+    'move to next worksheet
+    Next ws
+        
+End Sub
